@@ -1,5 +1,8 @@
 CC-MAIN-2023-50/
 *.bin
+*.warc.gz
+*.warc.wet.gz
+*.warc.wet.gz.part
 
 nav
 tags
