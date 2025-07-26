@@ -13,10 +13,97 @@ def mask_emails(text: str) -> str:
     return (replaced_text, num_replacements)
 
 def mask_phone_numbers(text: str) -> str:
-    # Match +X-XXX-XXX-XXXX or XXX-XXX-XXXX
-    replaced_numbers =  re.sub(r'\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{2}[-.\s]?\d{2}\b', '|||PHONE_NUMBER|||', text)
-    num_replacements = len(re.findall(r'\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{2}[-.\s]?\d{2}\b', text))
-    return (replaced_numbers, num_replacements)
+    original_text = text
+    # Normalize spaces: replace multiple spaces with single space
+    text = re.sub(r'\s+', ' ', text)
+    
+    # Debug: print normalized text
+    print(f"DEBUG - Normalized text: '{text}'")
+    
+    # Track number of replacements
+    num_replacements = 0
+    
+    # Pattern 1: Basic 10-digit numbers (1234567890)
+    pattern1 = r'\b\d{10}\b'
+    new_text = re.sub(pattern1, '|||PHONE_NUMBER|||', text)
+    if new_text != text:
+        num_replacements += len(re.findall(pattern1, text))
+        text = new_text
+    
+    # Pattern 2: Numbers with dashes (123-456-7890)
+    pattern2 = r'\b\d{3}-\d{3}-\d{4}\b'
+    new_text = re.sub(pattern2, '|||PHONE_NUMBER|||', text)
+    if new_text != text:
+        num_replacements += len(re.findall(pattern2, text))
+        text = new_text
+    
+    # Pattern 3: Numbers with parentheses and dashes ((123) 456-7890)
+    pattern3 = r'\(\d{3}\) \d{3}-\d{4}'
+    new_text = re.sub(pattern3, '|||PHONE_NUMBER|||', text)
+    if new_text != text:
+        num_replacements += len(re.findall(pattern3, text))
+        text = new_text
+    
+    # Pattern 4: Numbers with parentheses and spaces ((123) 456 7890)
+    pattern4 = r'\(\d{3}\) \d{3} \d{4}'
+    new_text = re.sub(pattern4, '|||PHONE_NUMBER|||', text)
+    if new_text != text:
+        print(f"DEBUG - Pattern 4 matched: {len(re.findall(pattern4, text))} matches")
+        num_replacements += len(re.findall(pattern4, text))
+        text = new_text
+    
+    # Pattern 5: Numbers with dots (123.456.7890)
+    pattern5 = r'\b\d{3}\.\d{3}\.\d{4}\b'
+    new_text = re.sub(pattern5, '|||PHONE_NUMBER|||', text)
+    if new_text != text:
+        num_replacements += len(re.findall(pattern5, text))
+        text = new_text
+    
+    # Pattern 6: Numbers with spaces (123 456 7890)
+    pattern6 = r'\b\d{3} \d{3} \d{4}\b'
+    new_text = re.sub(pattern6, '|||PHONE_NUMBER|||', text)
+    if new_text != text:
+        num_replacements += len(re.findall(pattern6, text))
+        text = new_text
+    
+    # Pattern 7: Mixed separators (123 456-7890)
+    pattern7 = r'\b\d{3} \d{3}-\d{4}\b'
+    new_text = re.sub(pattern7, '|||PHONE_NUMBER|||', text)
+    if new_text != text:
+        num_replacements += len(re.findall(pattern7, text))
+        text = new_text
+    
+    # Pattern 8: With country code (+1 123-456-7890)
+    pattern8 = r'\b\+1 \d{3}-\d{3}-\d{4}\b'
+    new_text = re.sub(pattern8, '|||PHONE_NUMBER|||', text)
+    if new_text != text:
+        num_replacements += len(re.findall(pattern8, text))
+        text = new_text
+    
+    # Pattern 9: With country code and parentheses (+1 (123) 456-7890)
+    pattern9 = r'\+1 \(\d{3}\) \d{3}-\d{4}'
+    new_text = re.sub(pattern9, '|||PHONE_NUMBER|||', text)
+    if new_text != text:
+        num_replacements += len(re.findall(pattern9, text))
+        text = new_text
+    
+    # Pattern 10: Edge case - no space after closing paren ((123)456-7890)
+    pattern10 = r'\(\d{3}\)\d{3}-\d{4}'
+    new_text = re.sub(pattern10, '|||PHONE_NUMBER|||', text)
+    if new_text != text:
+        num_replacements += len(re.findall(pattern10, text))
+        text = new_text
+    
+    # Pattern 11: Parentheses with dash immediately after ((123)-456-7890)
+    pattern11 = r'\(\d{3}\)-\d{3}-\d{4}'
+    new_text = re.sub(pattern11, '|||PHONE_NUMBER|||', text)
+    if new_text != text:
+        print(f"DEBUG - Pattern 11 matched: {len(re.findall(pattern11, text))} matches")
+        num_replacements += len(re.findall(pattern11, text))
+        text = new_text
+    
+    return (text, num_replacements)
+
 
 def mask_ip_addresses(text: str) -> str:
     replaced_ip = re.sub(r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b', '|||IP_ADDRESS|||', text)
@@ -53,3 +140,10 @@ for key, value in res.items():
     print("Record ID: ",value[0], "Text: ", key)
     print("Masked Text: ", value[1])
     print('--------------------')
+
+numbers = ["2831823829", "(283)-182-3829", "(283) 182 3829", "283-182-3829"]
+for number in numbers:
+    test_string = f"Feel free to contact me at {number} if you have any questions."
+    print(mask_phone_numbers(test_string))
+    print('--------------------')
+    print( "Feel free to contact me at |||PHONE_NUMBER||| if you have any questions.")
